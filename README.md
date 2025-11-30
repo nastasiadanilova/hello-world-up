@@ -1,44 +1,84 @@
-# Hello World! с мониторингом и автозапуском
+# веб-приложение, возвращающее значение. скрипт мониторинга и автозапуск
+[Содержание](#содержание) · [Описание](#описание) · [Запуск](#запуск) · [Управление](#управление) · [Настройки](#настройки)
 
-1. веб-приложение возвращает «hello world!» на http://127.0.0.1:8080
-2. мониторинг каждые 10 секунд проверяет доступность и перезапускает при сбоях
-3. одна команда установки + автозапуск при старте системы на linux, macos и windows
+## Содержание
+- [Описание](#описание)
+- [Запуск](#запуск)
+- [Управление](#управление)
+  - [macOS](#управление-на-macos)
+  - [Linux](#управление-на-linux)
+  - [Windows](#управление-на-windows)
+- [Настройки](#настройки)
 
-## структура проекта
-web.go         -> исходник веб-сервера
-monitor.go     -> мониторинг и перезапуск
-install.go     -> установщик + настройка автозапуска
-hello-world/   -> создаётся автоматически: готовые бинарники и лог
-readme.md      -> этот файл
+## Описание
+Простое веб-приложение, которое отвечает `Hello World!` на `http://127.0.0.1:8080`  
+Мониторинг каждые 10 секунд (можно менять) проверяет доступность и перезапускает при падении  
+Установщик одной командой + автозапуск при старте системы (macOS · Linux · Windows)
 
-## команды управления
+## Запуск (одинаково на Linux · macOS · Windows)
 
-| действие                     | linux                                                                 | macos                                                                                     | windows                                                                  |
-|------------------------------|-----------------------------------------------------------------------|-------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
-| установка                    | `go run install.go`                                                   | `go run install.go`                                                                       | `go run install.go`                                                                        |
-| проверка работы              | `curl http://127.0.0.1:8080`                                          | `curl http://127.0.0.1:8080`                                                              | `curl http://127.0.0.1:8080` или открыть в браузере                                        |
-| логи в реальном времени      | `tail -f hello-world/monitor.log`                                     | `tail -f hello-world/monitor.log`                                                         | `Get-Content -Path hello-world\monitor.log -Wait` (ps)<br>`type hello-world\monitor.log` (cmd) |
-| запустить мониторинг вручную | `./hello-world/monitor`                                               | `./hello-world/monitor`                                                                   | `hello-world\monitor.exe`                                                                  |
-| остановить быстро            | `pkill -f monitor`                                                    | `pkill -f monitor`                                                                        | `taskkill /f /im monitor.exe`                                                              |
-| остановить через систему     | `systemctl --user stop hello-monitor.service`                        | `launchctl unload ~/Library/LaunchAgents/local.helloworld.monitor.plist`                 | удалить `HelloWorld-Monitor.bat` из автозагрузки                                           |
-| статус сервиса               | `systemctl --user status hello-monitor.service`                       | `launchctl list \| grep helloworld`                                                       | —                                                                                          |
-| полностью убрать автозапуск  | `systemctl --user disable --now hello-monitor.service`<br>`rm ~/.config/systemd/user/hello-monitor.service` | `launchctl unload ~/Library/LaunchAgents/local.helloworld.monitor.plist`<br>`rm ~/Library/LaunchAgents/local.helloworld.monitor.plist` | удалить bat-файл из `%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup`             |
-| удалить всё                  | `rm -rf hello-world`                                                  | `rm -rf hello-world`                                                                      | `rmdir /s /q hello-world`                                                                  |
+```bash
+# 1. клонируем репозиторий
+git clone https://github.com/твой-ник/hello-world-up.git
+cd hello-world-up
 
+# 2. переходим в папку установщика
+cd cmd/install
 
-## настраиваемые параметры (monitor.go)
+# 3. запускаем установку
+go run install.go
 
-const 
+# Управление
 
-	// имя исполняемого файла веб-приложения (без .exe на windows - добавляется автоматически)
-	appBinaryName = "web"
+### Управление на macOS
 
-	// url, по которому мониторим провер проверять здоровье приложения
-	healthURL = "http://127.0.0.1:8080"
+| Действие                        | Команда                                                                                  |
+|---------------------------------|------------------------------------------------------------------------------------------|
+| Проверить работу                | `curl http://127.0.0.1:8080`                                                             |
+| Логи в реальном времени         | `tail -f ../hello-world/monitor.log`                                                     |
+| Остановить быстро               | `pkill -f monitor`                                                                       |
+| Остановить через систему        | `launchctl unload ~/Library/LaunchAgents/local.helloworld.monitor.plist`                |
+| Запустить снова                 | `launchctl load ~/Library/LaunchAgents/local.helloworld.monitor.plist`                  |
+| Полностью убрать автозапуск     | `rm ~/Library/LaunchAgents/local.helloworld.monitor.plist`                              |
+| Удалить всё                     | `rm -rf ../hello-world`                                                                  |
 
-	// интервал между проверками
-	interval = 10 * time.Second
+### Управление на Linux
 
-	// таймаут http-запроса при проверке доступности
-	timeout = 3 * time.Second
+| Действие                        | Команда                                                                                  |
+|---------------------------------|------------------------------------------------------------------------------------------|
+| Проверить работу                | `curl http://127.0.0.1:8080`                                                             |
+| Логи в реальном времени         | `tail -f ../hello-world/monitor.log`                                                     |
+| Остановить быстро               | `pkill -f monitor`                                                                       |
+| Статус сервиса                  | `systemctl --user status hello-monitor.service`                                          |
+| Остановить сервис               | `systemctl --user stop hello-monitor.service`                                            |
+| Запустить сервис                | `systemctl --user start hello-monitor.service`                                           |
+| Полностью убрать автозапуск     | `systemctl --user disable --now hello-monitor.service && rm ~/.config/systemd/user/hello-monitor.service` |
+| Удалить всё                     | `rm -rf ../hello-world`                                                                  |
 
+### Управление на Windows
+
+| Действие                        | Команда (CMD)                                            |
+|---------------------------------|----------------------------------------------------------|
+| Проверить работу                | открыть в браузере или `curl http://127.0.0.1:8080`       |
+| Логи в реальном времени         | `type ..\hello-world\monitor.log`                        |
+| Остановить быстро               | `taskkill /f /im monitor.exe`                            |
+| Полностью убрать автозапуск     | удалить файл `HelloWorld-Monitor.bat` из папки Автозагрузка |
+| Удалить всё                     | `rmdir /s /q ..\hello-world`                             |
+
+## Настройки (в monitor.go)
+
+| Параметр              | Значение по умолчанию                     | Что делает                                              |
+|-----------------------|-------------------------------------------|----------------------------------------------------------|
+| `appBinaryName`       | `"web"`                                   | имя бинарника веб-приложения (без .exe на Windows)      |
+| `healthURL`           | `"http://127.0.0.1:8080"`                 | адрес, по которому мониторим                   |
+| `interval`            | `10 * time.Second`                        | частота проверки в секундах                        |
+| `timeout`             | `3 * time.Second`                         | таймаут HTTP-запроса при проверке                      |
+
+**Как поменять:**  
+1. Открыть `monitor.go`  
+2. Поправить строки в начале файла на нужные значения  
+3. Запуск установщика заново:
+
+```bash
+cd cmd/install
+go run install.go
